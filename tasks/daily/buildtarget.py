@@ -13,79 +13,40 @@ import datetime
 import re
 
 
-class BuildTarget:
-    _initialized = False
-    _build_target_name = None
-    _target_instances = []
+class BuildTargetParser:
     _valid_instance_names = {}
 
-    @staticmethod
-    def get_target_instance() -> tuple[str, str] | None:
-        """尝试获取培养目标普通副本信息"""
-        if not BuildTarget._initialized:
-            BuildTarget.init_build_targets()
+    def __init__(self):
+        self.initialized = False
+        self.build_target_name = None
+        self.target_instances = []
 
-        require_ornament = datetime.date.today().weekday() >= (7 - cfg.build_target_ornament_weekly_count)
-
-        for instance_type, instance_name in BuildTarget._target_instances:
-            if "历战余响" in instance_type:
-                continue
-            if not require_ornament:
-                return (instance_type, instance_name)
-            if "饰品提取" in instance_type:
-                return (instance_type, instance_name)
-
-        return None
-
-    @staticmethod
-    def get_target_echo_instance() -> tuple[str, str] | None:
-        """尝试获取培养目标历战余响副本信息"""
-        if not BuildTarget._initialized:
-            BuildTarget.init_build_targets()
-
-        for instance_type, instance_name in BuildTarget._target_instances:
-            if "历战余响" in instance_type:
-                return (instance_type, instance_name)
-
-        return None
-
-    @staticmethod
-    def get_target_instances() -> list[tuple[str, str]]:
-        """尝试获取培养目标所有待刷副本信息"""
-        if not BuildTarget._initialized:
-            BuildTarget.init_build_targets()
-
-        return BuildTarget._target_instances
-
-    @staticmethod
-    def init_build_targets():
-        BuildTarget._initialized = True
-        BuildTarget._build_target_name = None
-        BuildTarget._target_instances = []
+    def init_build_targets(self):
+        self.initialized = True
+        self.build_target_name = None
+        self.target_instances = []
 
         log.hr("开始获取培养目标")
 
         instances = []
 
-        if BuildTarget._enter_build_target_page():
-            instances = BuildTarget._get_target_instances_all()
-            # instances = BuildTarget._get_target_instances_by_fixed_strategy()
+        if self._enter_build_target_page():
+            instances = self._get_target_instances()
 
         for instance in instances:
-            if BuildTarget._is_valid_instance(instance):
+            if self._is_valid_instance(instance):
                 log.debug(f"副本名称 {instance} 检验通过，加入目标列表")
-                BuildTarget._target_instances.append(instance)
+                self.target_instances.append(instance)
             else:
                 log.warning(f"目标副本识别错误，{instance} 不在任何已知副本列表中")
 
-        if BuildTarget._target_instances:
-            message = f"识别到培养目标 {BuildTarget._build_target_name or 'None'} 的待刷副本信息: {', '.join(f'{k} - {v}' for k,v in BuildTarget._target_instances)}"
+        if self.target_instances:
+            message = f"识别到培养目标 {self.build_target_name or 'None'} 的待刷副本信息: {', '.join(f'{k} - {v}' for k,v in self.target_instances)}"
             Base.send_notification_with_screenshot(message, NotificationLevel.ALL)
         else:
             Base.send_notification_with_screenshot("未能获取到任何培养目标副本信息，回退至默认的设置", NotificationLevel.ALL)
 
-    @staticmethod
-    def _enter_build_target_page():
+    def _enter_build_target_page(self):
         screen.change_to("guide3")
 
         if not auto.click_element("培养目标", "text", max_retries=5, crop=(300.0 / 1920, 291.0 / 1080, 147.0 / 1920, 104.0 / 1080)):
@@ -94,7 +55,7 @@ class BuildTarget:
 
         if len(auto.ocr_result) == 2:
             try:
-                BuildTarget._build_target_name = auto.ocr_result[1][1][0]
+                self.build_target_name = auto.ocr_result[1][1][0]
             except:
                 pass
 
@@ -104,56 +65,7 @@ class BuildTarget:
 
         return True
 
-    @staticmethod
-    def _get_target_instances_by_fixed_strategy():
-        entry_patterns = []
-        targets = []
-
-        if not auto.find_element("./assets/images/share/build_target/resources_sufficient_icon.png", "image", 0.7, take_screenshot=False):
-            entry_patterns.append(("进入", "./assets/images/share/build_target/traces_icon.png", "bottom_right"))
-            if auto.find_element("奖励次数", "text", include=True, crop=(1388.0 / 1920, 390.0 / 1080, 252.0 / 1920, 488.0 / 1080)):
-                if not any(map(lambda box: "0/3" in box[1][0], auto.ocr_result)):
-                    entry_patterns.append(("进入", "./assets/images/share/build_target/reward_count_label.png", "bottom_left"))
-        else:
-            if datetime.date.today().weekday() >= (7 - cfg.build_target_ornament_weekly_count):
-                entry_patterns.append(("传送", "./assets/images/share/build_target/ornament_icon.png", "bottom_right"))
-            else:
-                entry_patterns.append(("进入", "./assets/images/share/build_target/relic_icon.png", "bottom_right"))
-
-        log.warning(f"使用固定策略查找: {entry_patterns}")
-
-        for pattern in entry_patterns:
-            enter_target, enter_source, direction = pattern
-
-            for _ in range(5):
-                enter_pos = auto.find_element(
-                    enter_target,
-                    "min_distance_text",
-                    crop=(688.0 / 1920, 286.0 / 1080, 969.0 / 1920, 676.0 / 1080),
-                    source=enter_source,
-                    source_type="image",
-                    position=direction,
-                )
-                if not enter_pos:
-                    auto.mouse_scroll(6, -1)
-                    time.sleep(1)
-                else:
-                    break
-
-            if not enter_pos or not auto.click_element_with_pos(enter_pos):
-                break
-
-            if target_instance := BuildTarget._get_instance_info():
-                instance_type, instance_name = target_instance
-                targets.append((instance_type, instance_name))
-                if not BuildTarget._exit_instance(instance_type):
-                    log.warning("由于流程错误，终止获取培养目标副本信息，返回当前已获取列表")
-                    return targets
-
-        return targets
-
-    @staticmethod
-    def _get_target_instances_all():
+    def _get_target_instances(self):
         target_instances = []
 
         anchor_template = None
@@ -200,13 +112,13 @@ class BuildTarget:
                     log.error("尝试进入培养目标副本时失败")
                     return target_instances
 
-                if instance := BuildTarget._get_instance_info():
+                if instance := self._get_instance_info():
                     log.debug(f"识别到副本信息: {instance}")
 
                     target_instances.append(instance)
                     instance_type, _ = instance
 
-                    if not BuildTarget._exit_instance(instance_type):
+                    if not self._exit_instance(instance_type):
                         log.error("由于流程错误，终止获取培养目标副本信息，返回当前已获取列表")
                         return target_instances
 
@@ -228,8 +140,54 @@ class BuildTarget:
 
         return target_instances
 
-    @staticmethod
-    def _exit_instance(instance_type):
+    def _get_target_instances_legacy(self):
+        entry_patterns = []
+        targets = []
+
+        if not auto.find_element("./assets/images/share/build_target/resources_sufficient_icon.png", "image", 0.7, take_screenshot=False):
+            entry_patterns.append(("进入", "./assets/images/share/build_target/traces_icon.png", "bottom_right"))
+            if auto.find_element("奖励次数", "text", include=True, crop=(1388.0 / 1920, 390.0 / 1080, 252.0 / 1920, 488.0 / 1080)):
+                if not any(map(lambda box: "0/3" in box[1][0], auto.ocr_result)):
+                    entry_patterns.append(("进入", "./assets/images/share/build_target/reward_count_label.png", "bottom_left"))
+        else:
+            if datetime.date.today().weekday() >= (7 - cfg.build_target_ornament_weekly_count):
+                entry_patterns.append(("传送", "./assets/images/share/build_target/ornament_icon.png", "bottom_right"))
+            else:
+                entry_patterns.append(("进入", "./assets/images/share/build_target/relic_icon.png", "bottom_right"))
+
+        log.warning(f"使用固定策略查找: {entry_patterns}")
+
+        for pattern in entry_patterns:
+            enter_target, enter_source, direction = pattern
+
+            for _ in range(5):
+                enter_pos = auto.find_element(
+                    enter_target,
+                    "min_distance_text",
+                    crop=(688.0 / 1920, 286.0 / 1080, 969.0 / 1920, 676.0 / 1080),
+                    source=enter_source,
+                    source_type="image",
+                    position=direction,
+                )
+                if not enter_pos:
+                    auto.mouse_scroll(6, -1)
+                    time.sleep(1)
+                else:
+                    break
+
+            if not enter_pos or not auto.click_element_with_pos(enter_pos):
+                break
+
+            if target_instance := self._get_instance_info():
+                instance_type, instance_name = target_instance
+                targets.append((instance_type, instance_name))
+                if not self._exit_instance(instance_type):
+                    log.warning("由于流程错误，终止获取培养目标副本信息，返回当前已获取列表")
+                    return targets
+
+        return targets
+
+    def _exit_instance(self, instance_type):
         auto.press_key("esc")
 
         if "饰品提取" in instance_type:
@@ -252,8 +210,7 @@ class BuildTarget:
             log.warning("由于未知原因，未能返回培养目标副本列表页面")
             return False
 
-    @staticmethod
-    def _get_instance_info() -> tuple[str, str] | None:
+    def _get_instance_info(self) -> tuple[str, str] | None:
         if not auto.find_element(["挑战", "开始挑战"], "text", max_retries=10, crop=(1520.0 / 1920, 933.0 / 1080, 390.0 / 1920, 111.0 / 1080)):
             log.error("尝试进入培养目标副本时失败")
             return None
@@ -262,12 +219,12 @@ class BuildTarget:
 
         if "饰品提取" in instance_type:
             instance_type = "饰品提取"
-            instance_name = BuildTarget._parse_ornament_instance_info()
+            instance_name = self._parse_ornament_instance_info()
         elif "拟造花萼" in instance_type:
             instance_type = "拟造花萼（赤）"
-            instance_name = BuildTarget._parse_calyx_instance_info()
+            instance_name = self._parse_calyx_instance_info()
         else:
-            instance_name = BuildTarget._parse_standard_instance_info()
+            instance_name = self._parse_standard_instance_info()
 
         instance_type = (instance_type or "").strip()
         instance_name = (instance_name or "").strip()
@@ -278,12 +235,10 @@ class BuildTarget:
         log.warning("未能识别到副本信息")
         return None
 
-    @staticmethod
-    def _parse_ornament_instance_info() -> str | None:
+    def _parse_ornament_instance_info(self) -> str | None:
         return auto.get_single_line_text(max_retries=5, retry_delay=1.0, crop=(584.0 / 1920, 112.0 / 1080, 614.0 / 1920, 52.0 / 1080))
 
-    @staticmethod
-    def _parse_calyx_instance_info() -> str | None:
+    def _parse_calyx_instance_info(self) -> str | None:
         for i in range(2):
             click_offset = (i * 88 / auto.screenshot_scale_factor, 64 / auto.screenshot_scale_factor)
             if not auto.click_element("可能获取", "text", offset=click_offset, max_retries=5, crop=(1196.0 / 1920, 492.0 / 1080, 705.0 / 1920, 456.0 / 1080)):
@@ -314,8 +269,7 @@ class BuildTarget:
 
         return None
 
-    @staticmethod
-    def _parse_standard_instance_info() -> str | None:
+    def _parse_standard_instance_info(self) -> str | None:
         raw_instance_name = auto.get_single_line_text(max_retries=5, retry_delay=1.0, crop=(1173.0 / 1920, 113.0 / 1080, 735.0 / 1920, 53.0 / 1080))
 
         if "·" in raw_instance_name:
@@ -327,15 +281,99 @@ class BuildTarget:
     def _is_valid_instance(instance):
         instance_type, instance_name = instance
 
-        if not BuildTarget._valid_instance_names:
+        if not BuildTargetParser._valid_instance_names:
             with open("./assets/config/instance_names.json", "r", encoding="utf-8") as f:
-                BuildTarget._valid_instance_names = json.load(f)
+                BuildTargetParser._valid_instance_names = json.load(f)
 
         if not instance_type or not instance_name:
             return False
 
-        if BuildTarget._valid_instance_names.get(instance_type):
-            if BuildTarget._valid_instance_names[instance_type].get(instance_name):
+        if BuildTargetParser._valid_instance_names.get(instance_type):
+            if BuildTargetParser._valid_instance_names[instance_type].get(instance_name):
                 return True
 
         return False
+
+
+singleton = BuildTargetParser()
+
+
+class BuildTarget:
+    @staticmethod
+    def init_build_targets():
+        """
+        初始化培养目标。
+
+        备注:
+        - 如果没有启用培养目标配置，不会执行初始化逻辑。
+        """
+        if cfg.build_target_enable:
+            singleton.init_build_targets()
+
+    @staticmethod
+    def get_instances(include: list[str] | None = None, exclude: list[str] | None = None) -> list[tuple[str, str]]:
+        """
+        获取培养目标中所有待刷副本信息。
+
+        参数:
+        - include: 可选列表，指定包含的副本类型关键词列表（如 ["拟造花萼", "饰品提取"]）。若为空或 None，则返回全部副本。
+        - exclude: 可选列表，指定排除的副本类型关键词列表。
+
+        返回:
+        - list[(instance_type, instance_name)]: 列表，包含符合过滤条件的副本信息元组。当前未启用培养目标时，返回空列表。
+
+        备注:
+        - 如果同时指定了 include 和 exclude，会先应用 include 过滤，再应用 exclude 过滤
+        - 如果信息未初始化且已经启用了培养目标则会先进行一次初始化
+        """
+        if not cfg.build_target_enable:
+            return []
+
+        if not singleton.initialized:
+            singleton.init_build_targets()
+
+        filtered = []
+        for instance_type, instance_name in singleton.target_instances:
+            should_include = True
+            if include:
+                should_include = any(inst_type in instance_type for inst_type in include)
+
+            should_exclude = False
+            if exclude and should_include:
+                should_exclude = any(inst_type in instance_type for inst_type in exclude)
+
+            if should_include and not should_exclude:
+                filtered.append((instance_type, instance_name))
+
+        return filtered
+
+    @staticmethod
+    def get_instance(include: list[str] | None = None, exclude: list[str] | None = None) -> tuple[str, str] | None:
+        """
+        获取培养目标中第一个匹配的副本信息。
+
+        参数:
+        - include: 可选列表，指定包含的副本类型关键词列表（如 ["拟造花萼", "饰品提取"]）。若为空或 None，则返回所有副本中的第一个。
+        - exclude: 可选列表，指定排除的副本类型关键词列表。
+
+        返回:
+        - tuple[instance_type, instance_name] | None: 第一个符合条件的副本信息元组，未找到匹配项时返回 None。
+
+        备注:
+        - 如果同时指定了 include 和 exclude，会先应用 include 过滤，再应用 exclude 过滤
+        - 如果未找到任何符合条件的副本，返回 None
+        - 如果信息未初始化且已经启用了培养目标则会先进行一次初始化
+        """
+        instances = BuildTarget.get_instances(include=include, exclude=exclude)
+        return instances[0] if instances else None
+
+    @staticmethod
+    def get_daily_instance():
+        require_ornament = datetime.date.today().weekday() >= (7 - cfg.build_target_ornament_weekly_count)
+        if require_ornament:
+            return BuildTarget.get_instance(include=["饰品提取"])
+        return BuildTarget.get_instance(exclude=["历战余响", "饰品提取"])
+
+    @staticmethod
+    def get_weekly_instance():
+        return BuildTarget.get_instance(include=["历战余响"])

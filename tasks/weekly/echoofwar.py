@@ -36,7 +36,7 @@ class Echoofwar:
                                 if max_count == 0:
                                     log.info("🟣开拓力 < 30")
                                     return
-                                if cfg.build_target_enable and (target := BuildTarget.get_target_echo_instance()):
+                                if target := BuildTarget.get_weekly_instance():
                                     instance_name = target[1]
                                 else:
                                     instance_name = cfg.instance_names["历战余响"]

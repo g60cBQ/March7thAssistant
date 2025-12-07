@@ -18,8 +18,8 @@ class Power:
         instance_name = cfg.instance_names[cfg.instance_type]
         challenge_count = cfg.instance_names_challenge_count[cfg.instance_type]
 
-        if cfg.build_target_enable and (target := BuildTarget.get_target_instance()):
-            instance_type, instance_name = target
+        if targert := BuildTarget.get_daily_instance():
+            instance_type, instance_name = targert
 
         if not Instance.validate_instance(instance_type, instance_name):
             return False

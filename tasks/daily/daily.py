@@ -25,8 +25,7 @@ class Daily:
         activity.start()
 
         # 获取培养目标
-        if cfg.build_target_enable:
-            BuildTarget.init_build_targets()
+        BuildTarget.init_build_targets()
 
         # 在日常任务中检查是否使用支援角色
         Daily.lookup()
