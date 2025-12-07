@@ -153,6 +153,7 @@ activity_gardenofplenty_enable: false # 是否启用花藏繁生活动。true �
 activity_gardenofplenty_instance_type: 拟造花萼（金） # 花藏繁生副本类型。
 activity_realmofthestrange_enable: false # 是否启用异器盈界活动。true 开启，false 关闭。
 activity_planarfissure_enable: false # 是否启用位面分裂活动。true 开启，false 关闭。
+activity_ignore_buildtarget: false # 在进行双倍刷本时是否绕过培养目标。true 开启，false 关闭。
 
 # 货币战争配置
 currencywars_enable: false # 是否启用货币战争功能。true 开启，false 关闭。

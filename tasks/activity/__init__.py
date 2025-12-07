@@ -16,11 +16,11 @@ class ActivityManager:
         self.giftofodyssey = CheckInActivity("巡星之礼", cfg.activity_dailycheckin_enable)
         self.giftofradiance = CheckInActivity("巡光之礼", cfg.activity_dailycheckin_enable)
         self.festivegifts = CheckInActivity("庆典祝礼", cfg.activity_dailycheckin_enable)
-        self.gardenofplenty = GardenOfPlenty("花藏繁生", cfg.activity_gardenofplenty_enable, cfg.activity_gardenofplenty_instance_type, cfg.instance_names, cfg.instance_names_challenge_count)
-        self.realmofthestrange = RealmOfTheStrange("异器盈界", cfg.activity_realmofthestrange_enable, cfg.instance_names, cfg.instance_names_challenge_count)
-        self.realmofthestrange3 = RealmOfTheStrange("异器盈界300%", cfg.activity_realmofthestrange_enable, cfg.instance_names, cfg.instance_names_challenge_count)
-        self.planarfissure = PlanarFissure("位面分裂", cfg.activity_planarfissure_enable, cfg.instance_names)
-        self.planarfissure3 = PlanarFissure("位面分裂300%", cfg.activity_planarfissure_enable, cfg.instance_names)
+        self.gardenofplenty = GardenOfPlenty("花藏繁生", cfg.activity_gardenofplenty_enable, cfg.activity_gardenofplenty_instance_type)
+        self.realmofthestrange = RealmOfTheStrange("异器盈界", cfg.activity_realmofthestrange_enable)
+        self.realmofthestrange3 = RealmOfTheStrange("异器盈界300%", cfg.activity_realmofthestrange_enable)
+        self.planarfissure = PlanarFissure("位面分裂", cfg.activity_planarfissure_enable)
+        self.planarfissure3 = PlanarFissure("位面分裂300%", cfg.activity_planarfissure_enable)
 
         self.activity_functions = {
             "巡星之礼": self.giftofodyssey.start,

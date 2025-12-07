@@ -312,6 +312,12 @@ class SettingInterface(ScrollArea):
             "存在双倍次数时体力优先「饰品提取」",
             "activity_planarfissure_enable"
         )
+        self.activityIgnoreBuildtargetCard = SwitchSettingCard1(
+            FIF.REMOVE_FROM,
+            self.tr('双倍刷本活动时绕过培养目标'),
+            "在进行双倍刷本活动时是否绕过培养目标设置",
+            "activity_ignore_buildtarget"
+        )
 
         self.CurrencywarsGroup = SettingCardGroup(self.tr("货币"), self.scrollWidget)
         self.currencywarsEnableCard = SwitchSettingCard1(
@@ -957,6 +963,7 @@ class SettingInterface(ScrollArea):
         self.ActivityGroup.addSettingCard(self.activityGardenOfPlentyEnableCard)
         self.ActivityGroup.addSettingCard(self.activityRealmOfTheStrangeEnableCard)
         self.ActivityGroup.addSettingCard(self.activityPlanarFissureEnableCard)
+        self.ActivityGroup.addSettingCard(self.activityIgnoreBuildtargetCard)
 
         self.CurrencywarsGroup.addSettingCard(self.currencywarsEnableCard)
         self.CurrencywarsGroup.addSettingCard(self.currencywarsTypeCard)
