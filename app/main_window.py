@@ -293,8 +293,8 @@ class MainWindow(MSFluentWindow):
 
             # 重新初始化通知器
             try:
-                from module.notification import init_notifiers
-                init_notifiers()
+                from module.notification import reload_notifiers
+                reload_notifiers()
             except Exception:
                 pass
 

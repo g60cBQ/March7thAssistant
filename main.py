@@ -72,8 +72,7 @@ if not pyuac.isUserAdmin():
 
 from module.config import cfg
 from module.logger import log
-from module.notification import notif
-from module.notification.notification import NotificationLevel
+from module.notification import notif, SYSTEM_NOTIFS
 from module.ocr import ocr
 from utils.screenshot_util import save_error_screenshot
 
@@ -169,7 +168,7 @@ def run_sub_task_update(action):
 
 
 def run_notify_action():
-    notif.notify(content=cfg.notify_template['TestMessage'], image="./assets/app/images/March7th.jpg", level=NotificationLevel.ALL)
+    notif.send(content=cfg.notify_hello_message, image="./assets/app/images/March7th.jpg")
     pause_always()
     sys.exit(0)
 
@@ -220,16 +219,7 @@ if __name__ == "__main__":
         pause_on_error()
         sys.exit(1)
     except Exception as e:
-        log.error(cfg.notify_template['ErrorOccurred'].format(error=e))
-        # 保存错误截图
-        screenshot_path = save_error_screenshot(log)
-        # 发送通知，如果有截图则附带截图
-        notify_kwargs = {
-            'content': cfg.notify_template['ErrorOccurred'].format(error=e),
-            'level': NotificationLevel.ERROR
-        }
-        if screenshot_path:
-            notify_kwargs['image'] = screenshot_path
-        notif.notify(**notify_kwargs)
+        log.error(f"发生错误 {e}")
+        notif.send_template(SYSTEM_NOTIFS.ERROR_OCCURRED, save_error_screenshot(log), error=e)
         pause_on_error()
         sys.exit(1)

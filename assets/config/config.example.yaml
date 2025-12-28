@@ -368,27 +368,27 @@ update_source: GitHub # 更新源，可选值："GitHub"（海外源）, "Mirror
 mirrorchyan_cdk: "" # MirrorChyan CDK
 
 # 消息推送配置
-# 消息推送格式配置
-notify_template:
-  Title: 三月七小助手|･ω･)
-  TestMessage: "这是一条测试消息"
-  ContinueTime: "将在{time}继续运行"
-  FullTime: "开拓力剩余{power}/300\n预计{time}回满"
-  NewVersion: "发现新版本 {version}"
-  ErrorOccurred: "发生错误 {error}"
-  DailyPracticeCompleted: "每日实训已完成"
-  DailyPracticeNotCompleted: "每日实训未完成"
-  InstanceNotCompleted: "清体力未完成 {error}"
-  LevelCleared: "{name}已通关{level}层"
-  LevelClearedWithIssue: "{name}已通关{level}层\n领取星琼失败"
-  SimulatedUniverseCompleted: "模拟宇宙已完成"
-  SimulatedUniverseRewardClaimed: "模拟宇宙奖励已领取"
-  SimulatedUniverseNotCompleted: "模拟宇宙未完成"
-  FightCompleted: "锄大地已完成"
-  FightNotCompleted: "锄大地未完成"
-
 # 通知级别设置
-notify_level: all # 通知级别，可选 all（推送所有通知）或 error（仅推送错误和异常通知）。默认为 all。
+notify_level: normal # 通知级别，可选 normal（推送所有通知）、important（仅推送重要和错误通知）或 error（仅推送错误通知）。默认为 normal。
+
+# 通知标题
+notify_title: "三月七小助手|･ω･)"
+
+# 通知测试文本
+notify_hello_message: "这是一条测试消息"
+
+# 通知策略配置
+# 用于控制各个通知项的发送行为，列表结构。
+# 每个元素包含 name 和 rules 字段：
+# - name: 策略名称
+# - rules: 键值对配置对象，键为通知组名.通知项名（如 "reward.daily", "error.exception"），值为配置对象
+#   值对象支持以下字段：
+#   - title: 可选，自定义通知标题。未设置时使用默认标题（see notify_title）
+#   - template: 可选，自定义通知内容模板。支持占位符，具体占位符因通知项而异
+#   - enabled: 可选，是否启用该通知。true 启用，false 禁用。未设置则使用全局默认值（通过 notify_level 控制）
+notify_policies:
+  - name: default
+    rules: {}
 
 # Windows 原生通知
 notify_winotify_enable: true # 是否启用 Windows 原生通知。true 开启，false 关闭。

@@ -10,11 +10,12 @@ from .card.comboboxsettingcard1 import ComboBoxSettingCard1
 from .card.comboboxsettingcard2 import ComboBoxSettingCard2, ComboBoxSettingCardUpdateSource, ComboBoxSettingCardLog
 from .card.switchsettingcard1 import SwitchSettingCard1, SwitchSettingCardNotify, StartMarch7thAssistantSwitchSettingCard, SwitchSettingCardTeam, SwitchSettingCardImmersifier, SwitchSettingCardGardenofplenty, SwitchSettingCardEchoofwar, SwitchSettingCardHotkey, SwitchSettingCardCloudGameStatus
 from .card.rangesettingcard1 import RangeSettingCard1
-from .card.pushsettingcard1 import PushSettingCardInstance, PushSettingCardInstanceChallengeCount, PushSettingCardNotifyTemplate, PushSettingCardMirrorchyan, PushSettingCardEval, PushSettingCardDate, PushSettingCardKey, PushSettingCardTeam, PushSettingCardFriends, PushSettingCardTeamWithSwap, PushSettingCardPowerPlan
+from .card.pushsettingcard1 import PushSettingCardInstance, PushSettingCardInstanceChallengeCount, PushSettingCardMirrorchyan, PushSettingCardEval, PushSettingCardDate, PushSettingCardKey, PushSettingCardTeam, PushSettingCardFriends, PushSettingCardTeamWithSwap, PushSettingCardPowerPlan, PushSettingCardStr
 from .card.timepickersettingcard1 import TimePickerSettingCard1
 from .card.expandable_switch_setting_card import ExpandableSwitchSettingCard, ExpandableComboBoxSettingCardUpdateSource, ExpandablePushSettingCard, ExpandableComboBoxSettingCard, ExpandableComboBoxSettingCard1, ExpandableSwitchSettingCardEchoofwar
+from .notify_dialog import NotifyPolicyManagerDialog
 from module.config import cfg
-from module.notification import notif
+from module.notification import NotifyLevel
 from tasks.base.tasks import start_task
 from .tools.check_update import checkUpdate
 import os
@@ -826,13 +827,19 @@ class SettingInterface(ScrollArea):
             FIF.COMMAND_PROMPT,
             '通知级别',
             '',
-            texts={'推送所有通知': 'all', '仅推送错误通知': 'error'}
+            texts={'推送所有通知': NotifyLevel.NORMAL.value, '仅推送重要和紧急通知': NotifyLevel.IMPORTANT.value, '仅推送紧急通知': NotifyLevel.ERROR.value}
         )
-        self.notifyTemplateCard = PushSettingCardNotifyTemplate(
+        self.notifyPolicyManagerCard = PushSettingCard(
+            "修改",
+            FIF.SETTING,
+            "自定义各个通知的发送规则",
+            ""
+        )
+        self.notifyTitleCard = PushSettingCardStr(
             '修改',
-            FIF.FONT_SIZE,
-            "消息推送格式",
-            "notify_template"
+            FIF.FONT,
+            "通知标题",
+            "notify_title"
         )
 
         self.notifyEnableGroup = []
@@ -1129,7 +1136,8 @@ class SettingInterface(ScrollArea):
         self.NotifyGroup.addSettingCard(self.testNotifyCard)
         self.testNotifyCard.addSettingCards([
             self.notifyLevelCard,
-            self.notifyTemplateCard
+            self.notifyPolicyManagerCard,
+            self.notifyTitleCard,
         ])
         for value in self.notifyEnableGroup:
             self.NotifyGroup.addSettingCard(value)
@@ -1189,6 +1197,7 @@ class SettingInterface(ScrollArea):
         # self.borrowCharacterInfoCard.clicked.connect(self.__openCharacterFolder())
 
         self.testNotifyCard.clicked.connect(lambda: start_task("notify"))
+        self.notifyPolicyManagerCard.clicked.connect(self.__onNotifyRulesCardClicked)
 
         self.afterFinishCard.expandStateChanged.connect(self.__onExpandableCardStateChanged)
 
@@ -1269,6 +1278,11 @@ class SettingInterface(ScrollArea):
     #         duration=1500,
     #         parent=self
     #     )
+
+    def __onNotifyRulesCardClicked(self):
+        dialog = NotifyPolicyManagerDialog(self)
+        dialog.exec()
+
     def __onScriptPathCardClicked(self):
         script_path, _ = QFileDialog.getOpenFileName(self, "脚本或程序路径", "", "脚本或可执行文件 (*.ps1 *.bat *.exe)")
         if not script_path or cfg.script_path == script_path:

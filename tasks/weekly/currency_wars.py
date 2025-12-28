@@ -2,7 +2,7 @@ from module.screen import screen
 from module.automation import auto
 from module.config import cfg
 from module.logger import log
-from module.notification.notification import NotificationLevel
+from module.notification import NotifyLevel
 from tasks.base.base import Base
 from utils.date import Date
 from typing import Literal, Tuple, Optional
@@ -106,10 +106,10 @@ class CurrencyWars:
     def start(self):
         log.hr('准备货币战争', '0')
         if self.run():
-            Base.send_notification_with_screenshot("货币战争已完成", NotificationLevel.ALL, self.screenshot)
+            Base.custom_notify("货币战争已完成", image=self.screenshot, level=NotifyLevel.NORMAL)
             self.screenshot = None
         else:
-            Base.send_notification_with_screenshot("货币战争未完成", NotificationLevel.ERROR, self.screenshot)
+            Base.custom_notify("货币战争未完成", image=self.screenshot, level=NotifyLevel.NORMAL)
             self.screenshot = None
         self.get_reward()
         if Date.is_next_mon_x_am(cfg.currencywars_timestamp, cfg.refresh_hour):
@@ -150,7 +150,7 @@ class CurrencyWars:
                 if auto.click_element("./assets/images/zh_CN/universe/one_key_receive.png", "image", 0.9, max_retries=10):
                     if auto.find_element("./assets/images/zh_CN/base/click_close.png", "image", 0.8, max_retries=10):
                         time.sleep(2)
-                        Base.send_notification_with_screenshot("货币战争奖励已领取", NotificationLevel.ALL)
+                        Base.custom_notify("货币战争奖励已领取", level=NotifyLevel.NORMAL)
                         auto.click_element("./assets/images/zh_CN/base/click_close.png", "image", 0.8, max_retries=10)
                         time.sleep(1)
                         auto.press_key("esc")

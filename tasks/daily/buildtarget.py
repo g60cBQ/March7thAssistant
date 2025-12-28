@@ -4,7 +4,7 @@ from module.screen import screen
 from module.automation import auto
 from module.logger import log
 from module.config import cfg
-from module.notification.notification import NotificationLevel
+from module.notification import BUILD_TARGET_NOTIFS
 from tasks.base.base import Base
 from utils.image_utils import ImageUtils
 import json
@@ -74,7 +74,7 @@ class BuildTarget:
 
             for instance in BuildTarget._get_target_instances():
                 if not instance:
-                    Base.send_notification_with_screenshot("获取培养目标副本时出错，已提前返回当前已获取列表。\n详细情况请检查日志。", NotificationLevel.ERROR)
+                    Base.notify_with_screenshot(BUILD_TARGET_NOTIFS.RETURN_WITH_ERROR)
                     break
 
                 if BuildTarget._is_valid_instance(instance):
@@ -87,10 +87,10 @@ class BuildTarget:
                     break
 
         if BuildTarget._target_instances:
-            message = f"培养目标{BuildTarget._build_target_name or 'None'}的待刷副本: \n{'\n'.join(f'{k} - {v}' for k, v in BuildTarget._target_instances)}"
-            Base.send_notification_with_screenshot(message, NotificationLevel.ALL, screenshot)
+            formatted_instances = "\n".join(f"{k} - {v}" for k, v in BuildTarget._target_instances)
+            Base.notify_with_screenshot(BUILD_TARGET_NOTIFS.LIST, screenshot=screenshot, name=BuildTarget._build_target_name or "None", instances=formatted_instances)
         else:
-            Base.send_notification_with_screenshot("未能获取到任何培养目标副本信息，回退至默认的设置", NotificationLevel.ERROR)
+            Base.notify_with_screenshot(BUILD_TARGET_NOTIFS.NO_TARGET)
 
     @staticmethod
     def _enter_build_target_page():

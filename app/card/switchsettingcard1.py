@@ -120,8 +120,8 @@ class SwitchSettingCardNotify(SettingCard):
                 cfg.set_value(config, process_lineedit_text(lineedit.text()))
             # 配置修改后重新初始化通知器以应用变更
             try:
-                from module.notification import init_notifiers
-                init_notifiers()
+                from module.notification import reload_notifiers
+                reload_notifiers()
             except Exception:
                 pass
 
@@ -131,8 +131,8 @@ class SwitchSettingCardNotify(SettingCard):
         cfg.set_value(self.configname, isChecked)
         # 启用/禁用切换后重新初始化通知器
         try:
-            from module.notification import init_notifiers
-            init_notifiers()
+            from module.notification import reload_notifiers
+            reload_notifiers()
         except Exception:
             pass
 

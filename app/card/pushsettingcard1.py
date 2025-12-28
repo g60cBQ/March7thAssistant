@@ -470,20 +470,6 @@ class PushSettingCardInstanceChallengeCount(PushSettingCard):
             # self.contentLabel.setText(str(self.configvalue))
 
 
-class PushSettingCardNotifyTemplate(PushSettingCard):
-    def __init__(self, text, icon: Union[str, QIcon, FluentIconBase], title, configname, parent=None):
-        self.configvalue = cfg.get_value(configname)
-        super().__init__(text, icon, title, configname, "", parent)
-        self.button.clicked.connect(self.__onclicked)
-
-    def __onclicked(self):
-        message_box = MessageBoxNotifyTemplate(self.title, self.configvalue, self.window())
-        if message_box.exec():
-            for id, lineedit in message_box.lineEdit_dict.items():
-                self.configvalue[id] = lineedit.text().replace(r"\n", "\n")
-            cfg.set_value(self.configname, self.configvalue)
-
-
 class PushSettingCardTeam(PushSettingCard):
     def __init__(self, text, icon: Union[str, QIcon, FluentIconBase], title, configname, parent=None):
         with open("./assets/config/character_names.json", 'r', encoding='utf-8') as file:

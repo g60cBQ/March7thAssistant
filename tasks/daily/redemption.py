@@ -11,8 +11,8 @@ import json
 import datetime
 from typing import List, Dict, Optional
 from utils.registry.star_rail_setting import get_server_by_registry
-from module.notification import notif
-from module.notification.notification import NotificationLevel
+from tasks.base.base import Base
+from module.notification.template import REWARD_NOTIFS
 
 
 def load_codes(path: str) -> List[Dict]:
@@ -159,7 +159,7 @@ class Redemption:
                 if part.strip():  # 确保非空字符串
                     log.info(part.strip())
             if send_notification:
-                notif.notify(content=msg, level=NotificationLevel.ALL)
+                Base.notify(REWARD_NOTIFS.REDEMPTION_SUCCESS, count=len(successful_codes), codes=msg)
 
             reward.start_specific("mail")
             log.hr("完成", 2)

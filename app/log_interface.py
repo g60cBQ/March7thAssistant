@@ -17,7 +17,7 @@ from .common.style_sheet import StyleSheet
 from module.config import cfg
 from utils.tasks import TASK_NAMES
 from .schedule_dialog import ScheduleManagerDialog
-from module.notification import notif
+from module.notification import notif, NotifyLevel
 import shlex
 import threading
 import subprocess as sp
@@ -806,7 +806,7 @@ class LogInterface(ScrollArea):
 
                             def _send_notify(n):
                                 try:
-                                    notif.notify(n)
+                                    notif.send(n, level=NotifyLevel.ERROR)
                                 except Exception as e:
                                     self.logMessage.emit(f"发送通知失败: {n}, 错误: {e}\n")
                                 else:
